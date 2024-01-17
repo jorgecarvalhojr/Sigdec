@@ -158,6 +158,36 @@ public function questoes($ide, $idm, $idg)
         ]);
 
         if($resposta){
+            if(!is_dir("storage/relatorios/".$resposta -> Edicao['ano'])) {mkdir("storage/relatorios/".$resposta -> Edicao['ano']."/", 0755);}
+            $relatorio = relatorio::where('id_edicao', $resposta -> id_edicao)->cursor();
+            foreach($relatorio as $item){
+                $respostas = explode(',', $item -> respostas);
+                foreach($respostas as $teste){
+                    $opcoes = opcoes::findOrFail($teste);
+                    if($opcoes -> comentar == 1){
+                        $coment = explode(';', $item -> comentario);
+                        foreach($coment as $test){
+                            $cod = explode(',', $test);
+                            if($cod[0] == $opcoes -> ordem){
+                                $comentario = $cod[1];
+                                break;
+                            }
+                        }
+                        $dados[] = Array("Ano" => $item -> Edicao['ano'], "Registro" => date('d/m/Y H:i:s', strtotime($item -> data_cadastro)), "ordem" => $item -> Grupo['ordem'].".".$item -> Questao['ordem'], "Grupo" => $item -> Grupo['grupo'], "Questão" => $item -> Questao['questao'], "Resposta" => $opcoes-> opcao, "Comentário" => $comentario, "Município" => $item -> Redec['municipio'], "REDEC" => $item ->Redec['sigla']);
+                    }else{
+                        $dados[] = Array("Ano" => $item -> Edicao['ano'], "Registro" => date('d/m/Y H:i:s', strtotime($item -> data_cadastro)), "ordem" => $item -> Grupo['ordem'].".".$item -> Questao['ordem'], "Grupo" => $item -> Grupo['grupo'], "Questão" => $item -> Questao['questao'], "Resposta" => $opcoes-> opcao, "Comentário" => "", "Município" => $item -> Redec['municipio'], "REDEC" => $item ->Redec['sigla']);
+                    }
+                }
+            }
+
+			$output = fopen(public_path('storage/relatorios/'.$resposta -> Edicao['ano'].'/RD'.$resposta -> Edicao['ano'].'.csv'), 'w');
+			$header = \mb_convert_encoding(["Ano", "Registro", "ordem", "Grupo", "Questão", "Resposta", "Comentário", "Município", "REDEC"], "ISO-8859-1");
+			fputcsv($output , $header);
+			foreach($dados as $linha){
+				fputcsv($output, \mb_convert_encoding((array) $linha, "ISO-8859-1"));
+			}
+			fclose($output);
+
             $subject = "Cadastro de Resposta - Relatório Diagnose - ".$resposta -> Redec['municipio'];
             $mensagem = "O usuário ".Auth::user() -> nome." cadastrou uma resposta no R.D.<br>";
             $mensagem .= "Edição: ".$resposta ->Edicao['ano']."<br>";
@@ -228,6 +258,37 @@ public function questoes($ide, $idm, $idg)
         ]);
 
         if($update){
+
+            if(!is_dir("storage/relatorios/".$resposta -> Edicao['ano'])) {mkdir("storage/relatorios/".$resposta -> Edicao['ano']."/", 0755);}
+            $relatorio = relatorio::where('id_edicao', $resposta -> id_edicao)->cursor();
+            foreach($relatorio as $item){
+                $respostas = explode(',', $item -> respostas);
+                foreach($respostas as $teste){
+                    $opcoes = opcoes::findOrFail($teste);
+                    if($opcoes -> comentar == 1){
+                        $coment = explode(';', $item -> comentario);
+                        foreach($coment as $test){
+                            $cod = explode(',', $test);
+                            if($cod[0] == $opcoes -> ordem){
+                                $comentario = $cod[1];
+                                break;
+                            }
+                        }
+                        $dados[] = Array("Ano" => $item -> Edicao['ano'], "Registro" => date('d/m/Y H:i:s', strtotime($item -> data_cadastro)), "ordem" => $item -> Grupo['ordem'].".".$item -> Questao['ordem'], "Grupo" => $item -> Grupo['grupo'], "Questão" => $item -> Questao['questao'], "Resposta" => $opcoes-> opcao, "Comentário" => $comentario, "Município" => $item -> Redec['municipio'], "REDEC" => $item ->Redec['sigla']);
+                    }else{
+                        $dados[] = Array("Ano" => $item -> Edicao['ano'], "Registro" => date('d/m/Y H:i:s', strtotime($item -> data_cadastro)), "ordem" => $item -> Grupo['ordem'].".".$item -> Questao['ordem'], "Grupo" => $item -> Grupo['grupo'], "Questão" => $item -> Questao['questao'], "Resposta" => $opcoes-> opcao, "Comentário" => "", "Município" => $item -> Redec['municipio'], "REDEC" => $item ->Redec['sigla']);
+                    }
+                }
+            }
+
+			$output = fopen(public_path('storage/relatorios/'.$resposta -> Edicao['ano'].'/RD'.$resposta -> Edicao['ano'].'.csv'), 'w');
+			$header = \mb_convert_encoding(["Ano", "Registro", "ordem", "Grupo", "Questão", "Resposta", "Comentário", "Município", "REDEC"], "ISO-8859-1");
+			fputcsv($output , $header);
+			foreach($dados as $linha){
+				fputcsv($output, \mb_convert_encoding((array) $linha, "ISO-8859-1"));
+			}
+			fclose($output);
+            
             $subject = "Edição de Resposta - Relatório Diagnose - ".$resposta -> Redec['municipio'];
             $mensagem = "O usuário ".Auth::user() -> nome." editou uma resposta no R.D.<br>";
             $mensagem .= "Edição: ".$resposta ->Edicao['ano']."<br>";
